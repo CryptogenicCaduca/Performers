@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "danilf.performers"
         minSdkVersion 19
-        targetSdkVersion 23
+        targetSdkVersion 19
         versionCode 1
         versionName "1.0"
     }
@@ -28,4 +28,7 @@ dependencies {
     compile 'com.koushikdutta.ion:ion:2.1.7'
     compile 'com.google.android.gms:play-services-appindexing:8.1.0'
     compile 'com.google.guava:guava:19.0'
+    compile 'org.lucasr.smoothie:smoothie:0.1.0'
+    compile files('libs/Android-BitmapCache-2.3.jar')
+    compile 'com.jakewharton:disklrucache:2.0.2'
 }

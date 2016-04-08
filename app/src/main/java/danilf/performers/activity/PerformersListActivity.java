@@ -1,129 +1,100 @@
 package danilf.performers.activity;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Application;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
+import org.lucasr.smoothie.AsyncListView;
+import org.lucasr.smoothie.ItemManager;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import danilf.performers.App;
 import danilf.performers.R;
+import danilf.performers.adapter.DownloadCoverListener;
+import danilf.performers.adapter.ItemLoader;
 import danilf.performers.adapter.PerformerAdapter;
 import danilf.performers.model.Performer;
+import uk.co.senab.bitmapcache.BitmapLruCache;
 
-public class PerformersListActivity extends AppCompatActivity {
+public class PerformersListActivity extends AppCompatActivity implements LoadPerformersCallbackListener{
 
     List<Performer> performersList = new ArrayList<>();
     List<Performer> visiblePerformersList = new ArrayList<>();
     private PerformerAdapter adapter;
-    private ListView performers;
+    private AsyncListView performersListView;
+    private RelativeLayout loadingPanel;
     private boolean loadingMore = false;
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        DownloadPerformers();
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_performers_list);
-        performers = (ListView) findViewById(R.id.performersList);
+        performersListView = (AsyncListView) findViewById(R.id.performersList);
+        loadingPanel = (RelativeLayout) findViewById(R.id.loadingPanel);
+        Toast.makeText(this, "The Internet is down, please, check connection", Toast.LENGTH_SHORT);
+        //Downloading JSON with POP-performers from the URL that given there
+        //https://academy.yandex.ru/events/mobdev/msk-2016/register/
+        Ion.with(PerformersListActivity.this)
+                .load("http://cache-ektmts02.cdn.yandex.net/download.cdn.yandex.net/mobilization-2016/artists.json")
+                .asJsonArray()
+                .setCallback(jsonArrayFutureCallback);
     }
-
-    private Runnable loadMoreListItems = new Runnable() {
+    FutureCallback<JsonArray> jsonArrayFutureCallback = new FutureCallback<JsonArray>(){
         @Override
-        public void run() {
-            //Set flag so we cant load new items 2 at the same time
-            loadingMore = true;
-            //Get 15 new listitems
-            int currentSize = visiblePerformersList.size();
-            for (int i = currentSize; i < currentSize + 15 && i < performersList.size(); i++) {
-                //Fill the item with some bogus information
-                visiblePerformersList.add(performersList.get(i));
+        public void onCompleted(Exception e, JsonArray result) {
+            if(e == null) {
+                LoadPermormersAsyncTask loader = new LoadPermormersAsyncTask(PerformersListActivity.this);
+                loader.execute(result);
+            } else {
+                loadingPanel.setVisibility(View.GONE);
+                Toast.makeText(getApplicationContext(), "The Internet is down, please, check connection", Toast.LENGTH_SHORT);
             }
-            //Done! now continue on the UI thread
-            runOnUiThread(returnRes);
         }
     };
-    private Runnable returnRes = new Runnable() {
-        @Override
-        public void run() {
-            //Tell to the adapter that changes have been made, this will cause the list to refresh
-            //adapter.notifyDataSetChanged();
-            setTitle("Neverending List with " + String.valueOf(adapter.getCount()) + " items");
-            adapter.notifyDataSetInvalidated();
-            //Done loading more.
-            loadingMore = false;
+    private void loadMoreListItems() {
+        int currentSize = visiblePerformersList.size();
+        for (int i = currentSize; i < currentSize + 5 && i < performersList.size(); i++) {
+            //Fill the item with some bogus information
+            visiblePerformersList.add(performersList.get(i));
         }
-    };
+        //Done! now continue on the UI thread
+        //Tell to the adapter that changes have been made, this will cause the list to refresh
+        adapter.notifyDataSetChanged();
+        loadingPanel.setVisibility(View.GONE);
+    }
     private AbsListView.OnScrollListener onScrollListener = new AbsListView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(AbsListView view, int scrollState) {
-            //nothing to do
-        }
-
         @Override
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
             //what is the bottom item that is visible
             int lastInScreen = firstVisibleItem + visibleItemCount;
             //is the bottom item visible & not loading more already ? Load more !
-            if ((lastInScreen == totalItemCount) && !(loadingMore)) {
-                Thread thread = new Thread(null, loadMoreListItems);
-                thread.start();
+            if ((lastInScreen == totalItemCount) &&
+                    !(loadingMore) &&
+                    adapter.getCount()< performersList.size()) {
+                if(loadingPanel.getVisibility() != View.VISIBLE)
+                loadingPanel.setVisibility(View.VISIBLE);
+                loadMoreListItems();
             }
+        }
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+            //nothing to do
         }
     };
 
-    FutureCallback<JsonArray> jsonArrayFutureCallback = new FutureCallback<JsonArray>(){
-        @Override
-        public void onCompleted(Exception e, JsonArray result) {
-            //stop showing animation of downloading
-            //TODO:make animation
-        }
-    };
-    //Downloading JSON with POP performers from the URL that given there
-    //https://academy.yandex.ru/events/mobdev/msk-2016/register/
-    private void DownloadPerformers() {
-        try {
-            JsonArray jsonArray = Ion.with(PerformersListActivity.this)
-                    .load("http://cache-ektmts02.cdn.yandex.net/download.cdn.yandex.net/mobilization-2016/artists.json")
-                    .asJsonArray()
-                    .setCallback(jsonArrayFutureCallback).get();
-            Gson gson = new Gson();
-            // filter the collection to pass pop
-            for (int i = 0; i < jsonArray.size(); i++) {
-                Performer performer = gson.fromJson(jsonArray.get(i), Performer.class);
-                if (performer.getGenres().contains("pop")) {
-                    performersList.add(performer);
-                } else {
-                    //nothing to do
-                }
-            }
-            // sort collection by name of performer
-            Collections.sort(performersList);
-            adapter = new PerformerAdapter(PerformersListActivity.this, visiblePerformersList);
-            performers.setAdapter(adapter);
-            performers.setOnScrollListener(onScrollListener);
-            performers.setOnItemClickListener(onItemClickListener);
-        }
-        catch (Exception ex) {
-            Toast.makeText(this, ex.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
     AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener(){
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -136,4 +107,22 @@ public class PerformersListActivity extends AppCompatActivity {
             }
         }
     };
+
+    @Override
+    public void LoadPerformersCallback(ArrayList<Performer> result) {
+        //set Adapter
+        performersList = result;
+        adapter = new PerformerAdapter(this, visiblePerformersList);
+        performersListView.setAdapter(adapter);
+        performersListView.setOnScrollListener(onScrollListener);
+        performersListView.setOnItemClickListener(onItemClickListener);
+        //Set cache for images
+        BitmapLruCache cache = App.getInstance(this).getBitmapCache();
+        ItemLoader loader = new ItemLoader(cache,this,adapter);
+
+        ItemManager.Builder builder = new ItemManager.Builder(loader);
+        builder.setPreloadItemsEnabled(true).setPreloadItemsCount(5);
+        builder.setThreadPoolSize(1);
+        performersListView.setItemManager(builder.build());
+    }
 }
