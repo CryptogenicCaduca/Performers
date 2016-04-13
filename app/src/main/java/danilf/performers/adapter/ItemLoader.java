@@ -1,6 +1,7 @@
 package danilf.performers.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -9,8 +10,10 @@ import android.view.View;
 import android.widget.Adapter;
 import android.widget.Toast;
 
+import danilf.performers.DownloadCoverAsyncTask;
+import danilf.performers.DownloadCoverListener;
 import danilf.performers.R;
-import danilf.performers.activity.PerformersListActivity;
+import danilf.performers.model.PerformerViewHolder;
 import danilf.performers.model.Performer;
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
@@ -26,13 +29,14 @@ import java.util.concurrent.TimeoutException;
  */
 public class ItemLoader extends SimpleItemLoader<Performer, CacheableBitmapDrawable> implements DownloadCoverListener {
     final BitmapLruCache mCache;
-    final Context context;
     final PerformerAdapter adapter;
+    ErrorListener errorListener;
+    private boolean exceptionisShown = false;
 
-    public ItemLoader(BitmapLruCache mCache, Context context,PerformerAdapter adapter ) {
+    public ItemLoader(BitmapLruCache mCache ,PerformerAdapter adapter,ErrorListener errorListener ) {
         this.mCache = mCache;
-        this.context = context;
         this.adapter = adapter;
+        this.errorListener = errorListener;
     }
 
     @Override
@@ -41,18 +45,21 @@ public class ItemLoader extends SimpleItemLoader<Performer, CacheableBitmapDrawa
         CacheableBitmapDrawable wrapper = mCache.get(performer.getCover().get("small").toString());
         if (wrapper == null) {
             try {
+
                 wrapper = mCache.put(url, new DownloadCoverAsyncTask(this).execute(url).get(5, TimeUnit.SECONDS));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
-            }catch (TimeoutException e){
-                Toast.makeText(context,"Check connection otherwise I cannot load data for you",Toast.LENGTH_SHORT);
-            } catch (Exception e){
-                Toast.makeText(context,"",Toast.LENGTH_SHORT);
+            } catch (TimeoutException e) {
+                if (!exceptionisShown) {
+                    errorListener.throwError(e);
+                    exceptionisShown = true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-
         return wrapper;
     }
 
@@ -63,24 +70,24 @@ public class ItemLoader extends SimpleItemLoader<Performer, CacheableBitmapDrawa
 
     @Override
     public void displayItem(View itemView, CacheableBitmapDrawable result, boolean fromMemory) {
-        PerformerAdapter.ViewHolder holder = (PerformerAdapter.ViewHolder) itemView.getTag();
+        PerformerViewHolder holder = (PerformerViewHolder) itemView.getTag();
 
         if (result == null) {
-            holder.cover.setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.placeholder));
+            holder.getCover().setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.placeholder));
             return;
         }
 
         result.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 
         if (fromMemory) {
-            holder.cover.setImageDrawable(result);
+            holder.getCover().setImageDrawable(result);
         } else {
             BitmapDrawable emptyDrawable = new BitmapDrawable(itemView.getResources());
 
             TransitionDrawable fadeInDrawable =
                     new TransitionDrawable(new Drawable[] { emptyDrawable, result });
 
-            holder.cover.setImageDrawable(fadeInDrawable);
+            holder.getCover().setImageDrawable(fadeInDrawable);
             fadeInDrawable.startTransition(200);
         }
     }
@@ -91,7 +98,7 @@ public class ItemLoader extends SimpleItemLoader<Performer, CacheableBitmapDrawa
     }
 
     @Override
-    public void onTaskCompleted() {
+    public void onTaskCompleted(Bitmap result) {
 
     }
 }

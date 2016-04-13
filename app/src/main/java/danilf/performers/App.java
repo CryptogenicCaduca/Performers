@@ -17,14 +17,14 @@ public class App extends Application {
         super.onCreate();
 
         try {
+            //create folder for cacheable images
             File cacheDir = new File(getCacheDir(), "smoothie");
             cacheDir.mkdirs();
-
+            //set up builder for string images
             BitmapLruCache.Builder builder = new BitmapLruCache.Builder(this);
             builder.setMemoryCacheEnabled(true).setMemoryCacheMaxSizeUsingHeapSize();
             builder.setDiskCacheEnabled(true).setDiskCacheLocation(cacheDir);
             mCache = builder.build();
-
         } catch (Exception e){
             e.printStackTrace();
         }

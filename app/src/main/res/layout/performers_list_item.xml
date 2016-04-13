@@ -2,24 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:nestedScrollingEnabled="false"
-    android:weightSum="1">
-
+    android:scrollIndicators="right">
 
     <uk.co.senab.bitmapcache.CacheableImageView
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:id="@+id/coverView"
-        android:layout_weight="0.23"
         android:paddingLeft="0dp"
-        android:layout_gravity="left" />
+        android:layout_gravity="left"
+        android:layout_margin="5dp" />
 
     <TextView
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
-        android:id="@+id/permormerName"
-        android:padding="15dp" />
+        android:id="@+id/performerName"
+        android:padding="15dp"
+        android:autoText="false"
+        android:layout_margin="5dp" />
 
 </LinearLayout>

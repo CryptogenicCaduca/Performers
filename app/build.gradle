@@ -31,4 +31,5 @@ dependencies {
     compile 'org.lucasr.smoothie:smoothie:0.1.0'
     compile files('libs/Android-BitmapCache-2.3.jar')
     compile 'com.jakewharton:disklrucache:2.0.2'
+    compile 'me.biubiubiu.justifytext:library:1.1'
 }
