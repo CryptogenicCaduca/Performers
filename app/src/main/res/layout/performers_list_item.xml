@@ -7,7 +7,7 @@
     <uk.co.senab.bitmapcache.CacheableImageView
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:id="@+id/coverView"
+        android:id="@+id/itemCoverView"
         android:paddingLeft="0dp"
         android:layout_gravity="left"
         android:layout_margin="5dp" />

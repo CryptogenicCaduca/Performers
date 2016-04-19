@@ -1,6 +1,5 @@
 package danilf.performers.adapter;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
@@ -8,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.view.View;
 import android.widget.Adapter;
-import android.widget.Toast;
 
 import danilf.performers.DownloadCoverAsyncTask;
 import danilf.performers.DownloadCoverListener;
@@ -45,8 +43,9 @@ public class ItemLoader extends SimpleItemLoader<Performer, CacheableBitmapDrawa
         CacheableBitmapDrawable wrapper = mCache.get(performer.getCover().get("small").toString());
         if (wrapper == null) {
             try {
-
-                wrapper = mCache.put(url, new DownloadCoverAsyncTask(this).execute(url).get(5, TimeUnit.SECONDS));
+                Bitmap bitmap = new DownloadCoverAsyncTask(this).execute(url).get(5, TimeUnit.SECONDS);
+                if(bitmap != null)
+                wrapper = mCache.put(url, bitmap);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {

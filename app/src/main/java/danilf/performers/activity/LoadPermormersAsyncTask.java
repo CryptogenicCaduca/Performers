@@ -23,7 +23,7 @@ public class LoadPermormersAsyncTask extends AsyncTask<JsonArray,Integer,ArrayLi
     @Override
     protected ArrayList<Performer> doInBackground(JsonArray... params) {
         JsonArray jsonArray = params[0];
-        ArrayList<Performer> performersList = new ArrayList<>();
+        ArrayList<Performer> performersList = new ArrayList<Performer>();
         Gson gson = new Gson();
         // filter the collection to pass pop
         for (int i = 0; i < jsonArray.size(); i++) {

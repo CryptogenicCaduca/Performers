@@ -30,8 +30,8 @@ import uk.co.senab.bitmapcache.BitmapLruCache;
 
 public class PerformersListActivity extends AppCompatActivity implements LoadPerformersCallbackListener, ErrorListener {
 
-    List<Performer> performersList = new ArrayList<>();
-    List<Performer> visiblePerformersList = new ArrayList<>();
+    List<Performer> performersList = new ArrayList<Performer>();
+    List<Performer> visiblePerformersList = new ArrayList<Performer>();
     private PerformerAdapter adapter;
     private AsyncListView performersListView;
     private RelativeLayout loadingPanel;

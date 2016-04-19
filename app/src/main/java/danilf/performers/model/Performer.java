@@ -7,7 +7,6 @@ import android.support.annotation.NonNull;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by DanilF on 02.04.2016.

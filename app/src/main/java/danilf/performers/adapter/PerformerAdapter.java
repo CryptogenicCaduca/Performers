@@ -47,7 +47,7 @@ public class PerformerAdapter extends BaseAdapter{
         //set up viewholder pattern
         if (view == null) {
             view = LayoutInflater.from(context).inflate(R.layout.performers_list_item, parent, false);
-            holder = new PerformerViewHolder((CacheableImageView) view.findViewById(R.id.coverView),
+            holder = new PerformerViewHolder((CacheableImageView) view.findViewById(R.id.itemCoverView),
                     (TextView) view.findViewById(R.id.performerName));
             view.setTag(holder);
         } else {

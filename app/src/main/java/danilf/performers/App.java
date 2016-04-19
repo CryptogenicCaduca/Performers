@@ -25,11 +25,9 @@ public class App extends Application {
             builder.setMemoryCacheEnabled(true).setMemoryCacheMaxSizeUsingHeapSize();
             builder.setDiskCacheEnabled(true).setDiskCacheLocation(cacheDir);
             mCache = builder.build();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
     public BitmapLruCache getBitmapCache() {
